@@ -1,5 +1,10 @@
 package com.crawl;
 
+import com.common.RetrievedLinks;
+import com.common.StatementResult;
+import com.fileOperations.TextFileWriter;
+import com.sentiments.analyzers.SentimentsCompute;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -9,6 +14,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 public class CrawlLinks {
     // We'll use a fake USER_AGENT so the web server thinks the robot is a normal web browser.
@@ -41,7 +47,15 @@ public class CrawlLinks {
             for (Element link : linksOnPage) {
                 RetrievedLinks retlinks = new RetrievedLinks();
                 String absURL = link.absUrl("href");
-                if (absURL.contains("kashmir") || absURL.contains("jammu") || absURL.contains("Kashmir") || absURL.contains("Jammu")
+                boolean isFoundAny = false;
+                String[] keywords = searchKeyword.split(" ");
+                for (String keyword : keywords) {
+                    if (StringUtils.containsIgnoreCase(absURL, keyword)) {
+                        isFoundAny = true;
+                        break;
+                    }
+                }
+                if (isFoundAny
                         && !(absURL.equals(link.baseUri()))
                         && absURL.lastIndexOf(":") == 5
                         && !absURL.contains("#")
@@ -50,6 +64,7 @@ public class CrawlLinks {
                     retlinks.setURL(absURL);
                     retlinks.setDepth(depth + 1);
                     links.add(retlinks);
+                    System.out.println("absURL: " + absURL);
                 }
             }
             for (RetrievedLinks link : links) {
@@ -76,12 +91,31 @@ public class CrawlLinks {
         }
         System.out.println("Searching for the word " + retrievedLinks.getURL() + "...");
         String bodyText = html1.body().text();
-        String[] bodyTextLines = bodyText.split("/./ ");
-        System.out.println(bodyTextLines[0]);
+        getSentimentsScoreAverageAndWriteToFile(bodyText, retrievedLinks,searchKeyword);
+        System.out.println(bodyText);
         return true;
     }
 
+    private void getSentimentsScoreAverageAndWriteToFile(String bodyText, RetrievedLinks retrievedLinks,String searchKeyword) {
+        SentimentsCompute sentimentsCompute = new SentimentsCompute();
+        try {
+            System.out.println("bodyText: " + bodyText);
+            System.out.println(":::::::::::::::::::");
+            List<StatementResult> statementResults = sentimentsCompute.getSentimentsScore(bodyText, retrievedLinks.getURL(),searchKeyword);
+            if (statementResults.size() > 0 && TextFileWriter.writeTofile(statementResults)) {
+                System.out.println("created file");
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Cannot compute sentiments! ");
+        }
+    }
+
     public static void main(String[] args) {
-        new CrawlLinks().crawl("https://www.hindustantimes.com/india-news", 0, "kashmir");
+        new CrawlLinks().crawl("https://www.hindustantimes.com/india-news", 0, "Cricket England");
     }
 }

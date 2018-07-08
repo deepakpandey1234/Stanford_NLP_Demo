@@ -1,5 +1,5 @@
 
-package com.crawl;
+package com.common;
 
 public class RetrievedLinks {
     
