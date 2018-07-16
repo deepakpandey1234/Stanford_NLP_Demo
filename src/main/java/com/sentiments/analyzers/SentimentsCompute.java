@@ -18,6 +18,7 @@ import java.util.*;
 public class SentimentsCompute {
 
     public List<StatementResult> getSentimentsScore(String stringToCompute, String link, String searchKeyword) throws IOException {
+        Map<String, Integer> polarityCount = new LinkedHashMap<>();
         List<StatementResult> statementResults = new ArrayList<>();
 
         Properties props = new Properties();
@@ -30,7 +31,6 @@ public class SentimentsCompute {
 
         // An Annotation is a Map and you can get and use the various analyses individually.
         // For instance, this gets the parse tree of the first sentence in the text.
-        int longest = 0;
         int sentiment = -1;
         List<CoreMap> sentencess = annotation.get(CoreAnnotations.SentencesAnnotation.class);
         //removing first sentence since it might be vague details
@@ -47,9 +47,17 @@ public class SentimentsCompute {
                 Tree tree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
                 sentiment = RNNCoreAnnotations.getPredictedClass(tree);
                 String partText = sentence.toString();
-                sentiments.add(getText(sentiment, partText));
-                System.out.println(getText(sentiment, partText));
-                //Extracting words and POS
+                sentiments.add(getText(sentiment) + "<-Sentiments : : Text-> " + partText);
+                System.out.println(getText(sentiment) + partText);
+
+                if (polarityCount.containsKey(getText(sentiment))) {
+                    int temp = polarityCount.get(getText(sentiment));
+                    polarityCount.put(getText(sentiment), ++temp);
+                } else {
+                    polarityCount.put(getText(sentiment), 1);
+                }
+
+                //Extracting words and PartOfSpeech
                 for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
                     String word = token.get(CoreAnnotations.TextAnnotation.class);
                     String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
@@ -67,10 +75,15 @@ public class SentimentsCompute {
             result.setSentiment(sentiments);
             statementResults.add(result);
         }
+        Comparator comparator2 = new ValueComparator<String, Integer>((HashMap<String, Integer>) polarityCount);
+        TreeMap<String, Integer> result2 = new TreeMap<String, Integer>(comparator2);
+        result2.putAll(polarityCount);
+        System.out.println("--------"+result2.firstEntry().getKey());
+        statementResults.get(0).setHighestPolarityOfPage(result2.firstEntry().getKey());
         return statementResults;
     }
 
-    private static String getText(int sentiment, String partText) {
+    private static String getText(int sentiment) {
         String sen = "";
         if (sentiment > 4 && sentiment < 0) {
             return "Not in range !";
@@ -83,10 +96,25 @@ public class SentimentsCompute {
         } else {
             sen = "POSITIVE";
         }
-        return sen + ": <-sentiment : Text-> " + partText;
+        return sen;
     }
 
     public static void main(String[] args) throws IOException {
         new SentimentsCompute().getSentimentsScore("I am a happy person. This is Oracle.", "dummyURL", "searchKeyWord");
+    }
+}
+
+
+// a comparator using generic type
+class ValueComparator<K, V extends Comparable<V>> implements Comparator<K> {
+    HashMap<K, V> map = new HashMap<K, V>();
+
+    public ValueComparator(HashMap<K, V> map) {
+        this.map.putAll(map);
+    }
+
+    @Override
+    public int compare(K s1, K s2) {
+        return -map.get(s1).compareTo(map.get(s2));//descending order
     }
 }

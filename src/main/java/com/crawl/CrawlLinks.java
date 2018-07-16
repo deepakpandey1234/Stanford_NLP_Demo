@@ -12,6 +12,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -91,21 +93,24 @@ public class CrawlLinks {
         }
         System.out.println("Searching for the word " + retrievedLinks.getURL() + "...");
         String bodyText = html1.body().text();
-        getSentimentsScoreAverageAndWriteToFile(bodyText, retrievedLinks,searchKeyword);
+        getSentimentsScoreAverageAndWriteToFile(bodyText, retrievedLinks, searchKeyword);
         System.out.println(bodyText);
         return true;
     }
 
-    private void getSentimentsScoreAverageAndWriteToFile(String bodyText, RetrievedLinks retrievedLinks,String searchKeyword) {
+    private void getSentimentsScoreAverageAndWriteToFile(String bodyText, RetrievedLinks retrievedLinks, String searchKeyword) {
         SentimentsCompute sentimentsCompute = new SentimentsCompute();
         try {
             System.out.println("bodyText: " + bodyText);
             System.out.println(":::::::::::::::::::");
-            List<StatementResult> statementResults = sentimentsCompute.getSentimentsScore(bodyText, retrievedLinks.getURL(),searchKeyword);
-            if (statementResults.size() > 0 && TextFileWriter.writeTofile(statementResults)) {
+            List<StatementResult> statementResults = sentimentsCompute.getSentimentsScore(bodyText, retrievedLinks.getURL(), searchKeyword);
+            if (statementResults.size() > 0)
+                statementResults.get(0).setRelevantText(bodyText);
+            if (!statementResults.get(0).getHighestPolarityOfPage().equalsIgnoreCase("NEGATIVE")) {
+                TextFileWriter.writeTofile(statementResults, statementResults.get(0).getHighestPolarityOfPage() + LocalDate.now() + "_" + LocalDateTime.now().getNano() + "_Sentiments_results.txt");
                 System.out.println("created file");
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
 
                 }

@@ -13,8 +13,8 @@ import java.util.List;
 // Ref:: http://www.mkyong.com/java/how-to-write-to-file-in-java-bufferedwriter-example/
 public class TextFileWriter {
 
-    public static boolean writeTofile(List<StatementResult> statementResults) {
-        File f = new File(LocalDate.now()+"_"+LocalDateTime.now().getNano() + "_Sentiments_results.txt");
+    public static boolean writeTofile(List<StatementResult> statementResults,String fileName) {
+        File f = new File(fileName);
         FileWriter fw = null;
         BufferedWriter bw = null;
         try {

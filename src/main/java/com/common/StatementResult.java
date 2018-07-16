@@ -11,6 +11,24 @@ public class StatementResult {
     private List<String> sentiment = new ArrayList<>();
     private Map<String, List<String>> wordAndPos = new LinkedHashMap<>();
     private List<String> semanticGraph;
+    private String highestPolarityOfPage;
+    private String relevantText;
+
+    public String getRelevantText() {
+        return relevantText;
+    }
+
+    public void setRelevantText(String relevantText) {
+        this.relevantText = relevantText;
+    }
+
+    public String getHighestPolarityOfPage() {
+        return highestPolarityOfPage;
+    }
+
+    public void setHighestPolarityOfPage(String highestPolarityOfPage) {
+        this.highestPolarityOfPage = highestPolarityOfPage;
+    }
 
     public String getValidLinks() {
         return validLinks;
@@ -54,13 +72,14 @@ public class StatementResult {
 
     @Override
     public String toString() {
-        return "::::::::::::::::::::::::::::::::::::::::\nStatementResult{" +
-                "\n\nURL='" + validLinks + '\'' +
-                ", \n\nsearchKeyword='" + searchKeyword + '\'' +
-                ", \n\nsentiment result='" + sentiment + '\'' +
-                ", \n\nword And Part of Speech=" + wordAndPos +
-                ", \n\nsemanticGraph result='" + semanticGraph + '\'' +
-                "}\n\n";
+        return "StatementResult{\n" +
+                "\n\nvalidLinks='" + validLinks + '\'' +
+                "\n\nRelevant Content=' : " + relevantText + '\'' +
+                ",\n\n searchKeyword='" + searchKeyword + '\'' +
+                ", \n\nsentiment=" + sentiment +
+                ", \n\nwordAndPos=" + wordAndPos +
+                ", \n\nsemanticGraph=" + semanticGraph +
+                ", \n\nhighestPolarityOfPage='" + highestPolarityOfPage + '\'' +
+                "}\n\n\n";
     }
-
 }
