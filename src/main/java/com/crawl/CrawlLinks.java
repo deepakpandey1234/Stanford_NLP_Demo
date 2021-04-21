@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -69,8 +70,10 @@ public class CrawlLinks {
                     System.out.println("absURL: " + absURL);
                 }
             }
-            for (RetrievedLinks link : links) {
-                searchForWord(link, searchKeyword);
+
+            Iterator<RetrievedLinks> iterator = links.iterator();
+            for (int i = 0; i < 2 && i < links.size(); i++) {
+                searchForWord(iterator.next(), searchKeyword);
             }
             return true;
         } catch (IOException ioe) {
@@ -106,6 +109,8 @@ public class CrawlLinks {
             List<StatementResult> statementResults = sentimentsCompute.getSentimentsScore(bodyText, retrievedLinks.getURL(), searchKeyword);
             if (statementResults.size() > 0)
                 statementResults.get(0).setRelevantText(bodyText);
+                TextFileWriter.writeTofile(statementResults, statementResults.get(0).getHighestPolarityOfPage() + LocalDate.now() + "_" + LocalDateTime.now().getNano() + "_Sentiments_results.txt");
+                System.out.println("created file");
             if (!statementResults.get(0).getHighestPolarityOfPage().equalsIgnoreCase("NEGATIVE")) {
                 TextFileWriter.writeTofile(statementResults, statementResults.get(0).getHighestPolarityOfPage() + LocalDate.now() + "_" + LocalDateTime.now().getNano() + "_Sentiments_results.txt");
                 System.out.println("created file");
@@ -121,6 +126,6 @@ public class CrawlLinks {
     }
 
     public static void main(String[] args) {
-        new CrawlLinks().crawl("https://www.hindustantimes.com/india-news", 0, "Cricket England");
+        new CrawlLinks().crawl("https://timesofindia.indiatimes.com/india", 0, "bihar");
     }
 }

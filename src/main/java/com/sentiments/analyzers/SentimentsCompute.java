@@ -100,7 +100,7 @@ public class SentimentsCompute {
     }
 
     public static void main(String[] args) throws IOException {
-        new SentimentsCompute().getSentimentsScore("I am a happy person. This is Oracle.", "dummyURL", "searchKeyWord");
+        new SentimentsCompute().getSentimentsScore("hello. I am a happy person. killing in india 1991. This is Oracle.", "dummyURL", "searchKeyWord");
     }
 }
 
