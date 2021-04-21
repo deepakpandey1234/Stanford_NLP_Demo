@@ -12,13 +12,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.sql.SQLOutput;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 public class CrawlLinks {
     // We'll use a fake USER_AGENT so the web server thinks the robot is a normal web browser.
@@ -73,18 +74,26 @@ public class CrawlLinks {
             }
 
             Iterator<RetrievedLinks> iterator = links.iterator();
-            //only picking first 3 links for analysis for test
+            //only picking first few links for testing
+            List<Callable<Boolean>> tasks = new ArrayList<>(4);
+            CompletableFuture cf=null;
             for (int i = 0; i < 3 && i < links.size(); i++) {
-                CompletableFuture.runAsync(searchForWord(iterator.next(), searchKeyword));
+                cf=CompletableFuture.runAsync(()->searchForWord(iterator.next(), searchKeyword));
             }
+            cf.get();
             return true;
         } catch (IOException ioe) {
             System.out.println("We were not successful in our HTTP request");
             return false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
         }
+        return false;
     }
 
-    public boolean searchForWord(RetrievedLinks retrievedLinks, String searchKeyword) {
+    public Boolean searchForWord(RetrievedLinks retrievedLinks, String searchKeyword) {
         Connection connection1 = Jsoup.connect(retrievedLinks.getURL()).userAgent(USER_AGENT);
         Document html1 = null;
         try {
@@ -111,8 +120,8 @@ public class CrawlLinks {
             List<StatementResult> statementResults = sentimentsCompute.getSentimentsScore(bodyText, retrievedLinks.getURL(), searchKeyword);
             if (statementResults.size() > 0)
                 statementResults.get(0).setRelevantText(bodyText);
-                TextFileWriter.writeTofile(statementResults, statementResults.get(0).getHighestPolarityOfPage() + LocalDate.now() + "_" + LocalDateTime.now().getNano() + "_Sentiments_results.txt");
-                System.out.println("created file");
+            TextFileWriter.writeTofile(statementResults, statementResults.get(0).getHighestPolarityOfPage() + LocalDate.now() + "_" + LocalDateTime.now().getNano() + "_Sentiments_results.txt");
+            System.out.println("created file");
             if (!statementResults.get(0).getHighestPolarityOfPage().equalsIgnoreCase("NEGATIVE")) {
                 TextFileWriter.writeTofile(statementResults, statementResults.get(0).getHighestPolarityOfPage() + LocalDate.now() + "_" + LocalDateTime.now().getNano() + "_Sentiments_results.txt");
                 System.out.println("created file");
