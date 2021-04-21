@@ -73,12 +73,16 @@ public class CrawlLinks {
                 }
             }
 
-            Iterator<RetrievedLinks> iterator = links.iterator();
             //only picking first few links for testing
             List<Callable<Boolean>> tasks = new ArrayList<>(4);
-            CompletableFuture cf=null;
-            for (int i = 0; i < 3 && i < links.size(); i++) {
-                cf=CompletableFuture.runAsync(()->searchForWord(iterator.next(), searchKeyword));
+            CompletableFuture cf = null;
+            int count = 1;
+            for (RetrievedLinks link : links) {
+                cf = CompletableFuture.runAsync(() -> searchForWord(link, searchKeyword));
+                count = count + 1;
+                if (count > 2) {//to avoid java.lang.OutOfMemoryError: GC overhead limit exceeded. This need high performant system to compute all results
+                    break;
+                }
             }
             cf.get();
             return true;
