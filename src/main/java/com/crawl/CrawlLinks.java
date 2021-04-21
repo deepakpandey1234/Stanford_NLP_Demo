@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class CrawlLinks {
     // We'll use a fake USER_AGENT so the web server thinks the robot is a normal web browser.
@@ -72,8 +73,9 @@ public class CrawlLinks {
             }
 
             Iterator<RetrievedLinks> iterator = links.iterator();
-            for (int i = 0; i < 2 && i < links.size(); i++) {
-                searchForWord(iterator.next(), searchKeyword);
+            //only picking first 3 links for analysis for test
+            for (int i = 0; i < 3 && i < links.size(); i++) {
+                CompletableFuture.runAsync(searchForWord(iterator.next(), searchKeyword));
             }
             return true;
         } catch (IOException ioe) {
@@ -126,6 +128,6 @@ public class CrawlLinks {
     }
 
     public static void main(String[] args) {
-        new CrawlLinks().crawl("https://timesofindia.indiatimes.com/india", 0, "bihar");
+        new CrawlLinks().crawl("https://timesofindia.indiatimes.com/india", 0, "covid vaccine");
     }
 }
